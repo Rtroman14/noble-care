@@ -126,12 +126,12 @@ function LeakForm({ initialBuildingId, onDone }) {
     })
     onDone()
     const hours = getPlan(building.tier).responseHours
+    // No action button: we already navigate to the leak's progress page.
     toast.add({
       type: "success",
-      title: "Leak reported. Noble's team has been alerted.",
-      description: `${building.name} · response guaranteed within ${hours} hours`,
-      timeout: 8000,
-      actionProps: { children: "Track progress", onClick: () => router.push(`/leaks/${id}`) },
+      title: "Leak reported. Noble has been alerted.",
+      description: `Crew on site within ${hours} hours.`,
+      timeout: 6000,
     })
     router.push(`/leaks/${id}`)
   }

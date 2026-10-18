@@ -1,24 +1,24 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import { CalendarDaysIcon, CheckBadgeIcon, ShieldCheckIcon } from "@heroicons/react/24/outline"
+import { CalendarDaysIcon, CheckBadgeIcon, ChevronRightIcon, PhotoIcon, ShieldCheckIcon } from "@heroicons/react/24/outline"
 
 import { HealthChart } from "@/components/buildings/health-chart"
+import { RepairSheet } from "@/components/buildings/repair-sheet"
 import { PhotoTile } from "@/components/inspections/photo-tile"
 import { RoofMap } from "@/components/maps/roof-map"
 import { PageBody } from "@/components/page-header"
 import { GradeBadge, LeakStatusBadge, TierBadge } from "@/components/status-badges"
 import { StormBanner } from "@/components/storms/storm-banner"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useDemoStore, useVisibleBuildings } from "@/lib/demo-store"
 import { formatCostRange, formatDate, formatNumber, formatRelative } from "@/lib/format"
 import { severityLabel } from "@/lib/leaks"
@@ -33,6 +33,9 @@ const PIN_TONE = { now: "bg-destructive text-white", later: "bg-warning text-war
 export function BuildingDetail() {
   const { id } = useParams()
   const { user, leaks } = useDemoStore()
+  // Kept separately from `open` so the sheet's content stays put while it animates closed.
+  const [repair, setRepair] = useState({ open: false, finding: null })
+  const openRepair = (finding) => setRepair({ open: true, finding })
   const building = useVisibleBuildings().find((b) => b.id === id)
 
   if (!building) {
@@ -146,7 +149,13 @@ export function BuildingDetail() {
                   {items.length ? (
                     <ItemGroup>
                       {items.map((f) => (
-                        <Item key={f.id} variant="outline" size="sm" className="flex-col items-stretch">
+                        <Item
+                          key={f.id}
+                          variant="outline"
+                          size="sm"
+                          className="cursor-pointer flex-col items-stretch text-left hover:bg-muted/50"
+                          render={<button type="button" onClick={() => openRepair(f)} />}
+                        >
                           <div className="flex items-start gap-2">
                             <ItemMedia>
                               <span className={cn("flex size-5 items-center justify-center rounded-full text-[0.7rem] font-semibold", PIN_TONE[f.priority])}>
@@ -158,21 +167,16 @@ export function BuildingDetail() {
                               <ItemDescription>{f.detail}</ItemDescription>
                             </ItemContent>
                           </div>
-                          {key !== "monitor" && (
-                            <ItemActions className="justify-between pl-7">
-                              <span className="text-xs font-medium tabular-nums">{f.included ? "Included in RAMP" : formatCostRange(f.costLow, f.costHigh)}</span>
-                              {!isStaff && !f.included && (
-                                <Tooltip>
-                                  <TooltipTrigger render={<span tabIndex={0} />}>
-                                    <Button size="xs" variant="outline" disabled>
-                                      Approve repair
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Coming soon: approve and schedule repairs here</TooltipContent>
-                                </Tooltip>
-                              )}
-                            </ItemActions>
-                          )}
+                          <ItemActions className="justify-between pl-7">
+                            <span className="text-xs font-medium tabular-nums">
+                              {key === "monitor" ? "" : f.included ? "Included in RAMP" : formatCostRange(f.costLow, f.costHigh)}
+                            </span>
+                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <PhotoIcon className="size-3.5" />
+                              3 photos
+                              <ChevronRightIcon className="size-3.5" />
+                            </span>
+                          </ItemActions>
                         </Item>
                       ))}
                     </ItemGroup>
@@ -187,6 +191,15 @@ export function BuildingDetail() {
             )
           })}
         </TabsContent>
+        <RepairSheet
+          open={repair.open}
+          onOpenChange={(open) => setRepair((r) => ({ ...r, open }))}
+          finding={repair.finding}
+          number={repair.finding ? findings.indexOf(repair.finding) + 1 : null}
+          building={building}
+          inspection={inspections[0]}
+          canApprove={!isStaff}
+        />
 
         <TabsContent value="inspections" className="mt-2 flex flex-col gap-4">
           {inspections.map((insp, i) => (

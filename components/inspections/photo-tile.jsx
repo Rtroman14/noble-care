@@ -24,7 +24,7 @@ const KINDS = {
   ponding: { icon: CloudIcon, tone: "from-cyan-900/80 to-sky-600/70" },
 }
 
-function Tile({ kind, className, iconClassName }) {
+export function PhotoPlaceholder({ kind, className, iconClassName }) {
   const { icon: Icon, tone } = KINDS[kind] ?? { icon: CameraIcon, tone: "from-zinc-700 to-zinc-500" }
   return (
     <div className={cn("relative flex items-center justify-center overflow-hidden bg-gradient-to-br text-white/80", tone, className)}>
@@ -43,7 +43,7 @@ export function PhotoTile({ photo, meta }) {
         onClick={() => setOpen(true)}
         className="group flex flex-col gap-1.5 text-left outline-none"
       >
-        <Tile kind={photo.kind} className="aspect-[4/3] w-full rounded-lg transition-opacity group-hover:opacity-90 group-focus-visible:ring-3 group-focus-visible:ring-ring/50" />
+        <PhotoPlaceholder kind={photo.kind} className="aspect-[4/3] w-full rounded-lg transition-opacity group-hover:opacity-90 group-focus-visible:ring-3 group-focus-visible:ring-ring/50" />
         <span className="line-clamp-2 text-xs text-muted-foreground">{photo.caption}</span>
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
@@ -52,7 +52,7 @@ export function PhotoTile({ photo, meta }) {
             <DialogTitle>{photo.caption}</DialogTitle>
             {meta && <DialogDescription>{meta}</DialogDescription>}
           </DialogHeader>
-          <Tile kind={photo.kind} className="aspect-[4/3] w-full rounded-lg" iconClassName="size-14" />
+          <PhotoPlaceholder kind={photo.kind} className="aspect-[4/3] w-full rounded-lg" iconClassName="size-14" />
         </DialogContent>
       </Dialog>
     </>
